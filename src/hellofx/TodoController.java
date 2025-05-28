@@ -2,6 +2,7 @@ package hellofx;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.sql.Connection;
 
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -18,6 +19,8 @@ import javafx.stage.Stage;
 public class TodoController {
     String filePath = "D:\\ALL ABOUT NP University\\PERKULIAHAN\\Semester 4\\OOP\\practice\\todolist-deskapp\\src\\output\\";
 
+    private Integer editingId = null;
+
     @FXML TextField title, status;
     
     @FXML Button closeButton, saveTodo;
@@ -26,6 +29,11 @@ public class TodoController {
 
     private Controller mainController;
 
+    public void setEditData(int id, String titleText, String statusText) {
+        this.editingId = id;
+        this.title.setText(titleText);
+        this.status.setText(statusText);
+    }
     
     @FXML
     private void closePopup() {
@@ -40,19 +48,26 @@ public class TodoController {
             String statusText = status.getText();
             
             if (titleText.isEmpty() || statusText.isEmpty()) {
-                System.out.println("Please fill in all fields");
+                // System.out.println("Please fill in all fields");
                 errorMessage.setText("Please fill in all fields");
                 return;
             }
+            System.out.println(editingId);
 
-            FileWriter fileObj = new FileWriter(filePath + titleText + ".txt");
-            fileObj.write(titleText + "|" + statusText);
-            fileObj.close();
+            Connection conn = DbModel.getConnection();
+            if (editingId != null) {
+                // Update existing todo item
+                DbModel.updateData(conn, editingId, titleText, statusText);
+            } else {
+                // Insert new todo item
+                DbModel.insertData(conn, titleText, statusText);
+            }
+
             if (mainController != null) {
                 mainController.refreshTable();
             }
             closePopup();
-            System.out.println("Successfully wrote to the file");
+            // System.out.println("Successfully wrote to the file");
         } catch (Exception e) {
             // TODO: handle exception
             e.printStackTrace();
